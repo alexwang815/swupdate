@@ -1806,9 +1806,8 @@ server_op_res_t server_start(char *fname, int argc, char *argv[])
 	}
 	/* If an update was performed, report its status to the hawkBit server
 	 * prior to entering the main loop. May run indefinitely if server is
-	 * unavailable. In case of an error, the error is returned to the main
-	 * loop, thereby exiting suricatta. */
-	server_op_res_t state_handled;
+	 * unavailable.
+	 */
 	server_hawkbit.update_state = update_state;
 
 
@@ -1823,15 +1822,10 @@ server_op_res_t server_start(char *fname, int argc, char *argv[])
 	 * by an external process and we have to wait for it
 	 */
 	if (update_state != STATE_WAIT) {
-		while ((state_handled = server_handle_initial_state(update_state)) !=
-		       SERVER_OK) {
-			if (state_handled == SERVER_EAGAIN) {
-				INFO("Sleeping for %ds until retrying...",
-				     INITIAL_STATUS_REPORT_WAIT_DELAY);
-				sleep(INITIAL_STATUS_REPORT_WAIT_DELAY);
-				continue;
-			}
-			return state_handled; /* Report error to main loop, exiting. */
+		while (server_handle_initial_state(update_state) != SERVER_OK) {
+			INFO("Sleeping for %ds until retrying...",
+				INITIAL_STATUS_REPORT_WAIT_DELAY);
+			sleep(INITIAL_STATUS_REPORT_WAIT_DELAY);
 		}
 	}
 
